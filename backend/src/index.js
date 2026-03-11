@@ -17,8 +17,21 @@ app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ limit: "10mb", extended: true }));
 app.use(cookieParser())
 
+const allowedOrigins = [
+    "*",
+    process.env.FRONTEND_URL
+].filter(Boolean);
+
 app.use(cors({
-    origin: process.env.FRONTEND_URL,
+    origin: function (origin, callback) {
+        // Allow requests with no origin (like mobile apps or curl requests)
+        if (!origin) return callback(null, true);
+        if (allowedOrigins.indexOf(origin) !== -1) {
+            callback(null, true);
+        } else {
+            callback(new Error('By CORS: This origin is not allowed'));
+        }
+    },
     credentials: true,
 }))
 
@@ -32,4 +45,4 @@ app.get("/", (req, res) => {
 server.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
     connectDb();
-})
+})
